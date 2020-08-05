@@ -4,8 +4,6 @@ import streamlit as st
 from fastai import *
 from fastai.vision import *
 import numpy as np
-import pandas as pd
-import matplotlib.image as mpimg
 import os
 import time
 from PIL import Image
