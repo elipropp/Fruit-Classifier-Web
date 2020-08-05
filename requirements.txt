@@ -4,5 +4,5 @@ asyncio==3.4.3
 fastai==1.0.61
 https://download.pytorch.org/whl/cpu/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
 numpy==1.16.3
-pillow~=6.0
+pillow==7.1.0
 streamlit==0.52.1
