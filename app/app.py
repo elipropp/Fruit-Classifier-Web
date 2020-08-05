@@ -4,6 +4,7 @@ import streamlit as st
 from fastai import *
 from fastai.vision import *
 import numpy as np
+import pandas as pd
 import matplotlib.image as mpimg
 import os
 import time
@@ -12,7 +13,7 @@ import requests
 from io import BytesIO
 
 # App Title
-st.title("Test Title")
+st.title("Fruit Classifier")
 
 export_file_url = 'https://drive.google.com/uc?export=download&id=1fW61igTn4zac92nR825R55hdE7pvibgO'
 export_file_name = 'Fruit_classifier.pkl'
@@ -21,6 +22,35 @@ classes = ['Apple', 'Banana', 'Blackberry', 'Blueberry', 'Lemon', 'Lime', 'Mango
            'Pear', 'Raspberry', 'Strawberry', 'Tomato']
 
 path = Path(__file__).parent
+
+st.sidebar.header("About the Model")
+st.sidebar.markdown(""" 
+
+Hi! Welcome to my fruit classifier.
+Upload an image or pass in a url of one of the following
+fruits, and have the classifier let you know what it is.
+
+Apple, Banana, Blackberry, Blueberry, Lemon,
+Lime, Mango, Orange, Pear, Raspberry, 
+Strawberry, Tomato
+
+And yes, tomatoes are fruits.
+""")
+
+st.sidebar.header("About Me")
+st.sidebar.markdown("""
+
+I'm Eli Propp, a computer engineering student at the
+University of Waterloo. I'm passionate about data science,
+machine learning and software development.
+
+Check out the GitHub Repo for this website below.
+Reach out if like what you see, have any tips, or
+want to work on a project together.
+
+GitHub Repo: [Click here](https://github.com/Ehpropp/Fruit-Classifier-Web)
+
+""")
 
 
 async def download_file(url, dest):
@@ -41,11 +71,8 @@ async def setup_learner():
 model = asyncio.run(setup_learner())
 
 
-def predict(img, display_img):
-
-    # Display the image
-    st.image(display_img, use_column_width=True)
-    # display.show()
+@st.cache
+def predict(img):
 
     # Show a message while executing
     with st.spinner('Analyzing...'):
@@ -56,8 +83,17 @@ def predict(img, display_img):
 
     pred_prob = round(torch.max(model.predict(img)[2]).item()*100)
 
-    st.write(str(pred_class))
-    st.write(str(pred_prob))
+    return str(pred_class), str(pred_prob)
+
+
+def print_result(fruit, prob):
+    st.success("This is a " + fruit + " with " +
+               prob + "%" + " certainty")
+
+
+def show_image(image):
+    # Display the image
+    st.image(image, use_column_width=True)
 
 
 upload_type = st.radio(
@@ -69,10 +105,13 @@ if (upload_type == 'Upload Image from device'):
     if img_file_buffer is not None:
         img = open_image(img_file_buffer)
         display_img = np.array(Image.open(img_file_buffer))
-        predict(img, display_img)
+        show_image(display_img)
+        fruit, prob = predict(img)
+        print_result(fruit, prob)
 
 elif (upload_type == 'Upload image from URL'):
-    url = st.text_input("Please input a url:")
+    st.write("The url should be a link directly to the file.")
+    url = st.text_input("URL:")
 
     if url != "":
         try:
@@ -81,8 +120,12 @@ elif (upload_type == 'Upload image from URL'):
             pil_img = Image.open(BytesIO(response.content))
             img = open_image(BytesIO(response.content))
             display_img = np.asarray(pil_img)
+            show_image(display_img)
 
-            predict(img, display_img)
+            predict(img)
+
+            fruit, prob = predict(img)
+            print_result(fruit, prob)
 
         except:
             st.text("Invalid url!")
