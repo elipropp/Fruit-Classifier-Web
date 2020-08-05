@@ -41,10 +41,10 @@ async def setup_learner():
 model = asyncio.run(setup_learner())
 
 
-def predict(img, display):
+def predict(img, display_img):
 
     # Display the image
-    st.image(display, use_column_width=True)
+    st.image(display_img, use_column_width=True)
     # display.show()
 
     # Show a message while executing
@@ -54,7 +54,10 @@ def predict(img, display):
     pred_class = model.predict(img)[0]
     # Maybe add in prediction probability after
 
-    st.write(pred_class)
+    pred_prob = round(torch.max(model.predict(img)[2]).item()*100)
+
+    st.write(str(pred_class))
+    st.write(str(pred_prob))
 
 
 upload_type = st.radio(
@@ -65,16 +68,21 @@ if (upload_type == 'Upload Image from device'):
         "Upload an image", type=['png', 'jpg', 'jpeg'])
     if img_file_buffer is not None:
         img = open_image(img_file_buffer)
-        image = np.array(Image.open(img_file_buffer))
-        predict(img, image)
+        display_img = np.array(Image.open(img_file_buffer))
+        predict(img, display_img)
 
-# elif (upload_type == 'Upload image from URL'):
-#     url = st.text_input("Please input a url:")
+elif (upload_type == 'Upload image from URL'):
+    url = st.text_input("Please input a url:")
 
-#     if url != "":
-#         try:
-#             # Read image from the url
-#             response = requests.get(url)
+    if url != "":
+        try:
+            # Read image from the url
+            response = requests.get(url)
+            pil_img = Image.open(BytesIO(response.content))
+            img = open_image(BytesIO(response.content))
+            display_img = np.asarray(pil_img)
 
-#             pil_img = PIL.Image.open(BytesIO(response.content))
-#             display_img = np.asarray(pil_img)
+            predict(img, display_img)
+
+        except:
+            st.text("Invalid url!")
